@@ -231,6 +231,44 @@
   font-family: 'Arial', sans-serif;
 }
 
+/*FILTER*/
+
+.filter-container {
+  display: flex;
+  gap: 15px; /* Adds space between filters */
+  align-items: center;
+  justify-content: flex-start; /* Align to the left initially */
+  margin-left: 20px; /* Moves filters to the right */
+  margin-bottom: 20px; /* Adds spacing below filters */
+}
+
+.filter-container label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.filter-container select,
+.filter-container input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.filter-container select {
+  cursor: pointer;
+  background-color: #f9f9f9;
+}
+
+@media (max-width: 600px) {
+  .filter-container {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 10px;
+  }
+}
+/*Filter*/
+
 .filter-container label {
   font-weight: bold;
   margin-right: 10px;

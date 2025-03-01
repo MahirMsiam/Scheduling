@@ -140,40 +140,79 @@ function App() {
     });
   };
 
+  // const handleScheduleSubmit = (e) => {
+  //   e.preventDefault();
+
+  //   // Add new schedule to Firebase
+  //   const schedulesRef = ref(database, "schedules");
+  //   const newScheduleRef = push(schedulesRef);
+
+  //   set(newScheduleRef, {
+  //     ...formData,
+  //     contact: formData.contact,
+  //   })
+  //     .then(() => {
+  //       // Reset form and go back to home
+  //       setFormData({
+  //         name: "",
+  //         contact: "",
+  //         studentId: "",
+  //         availability: {
+  //           sunday: ["", "", ""],
+  //           monday: ["", "", ""],
+  //           tuesday: ["", "", ""],
+  //           wednesday: ["", "", ""],
+  //           thursday: ["", "", ""],
+  //         },
+  //       });
+
+  //       alert("Schedule submitted successfully!");
+  //       handleBackToHome();
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error adding schedule: ", error);
+  //       alert("Error submitting schedule. Please try again.");
+  //     });
+  // };
+
+  //Validation
+
   const handleScheduleSubmit = (e) => {
     e.preventDefault();
-
-    // Add new schedule to Firebase
+  
     const schedulesRef = ref(database, "schedules");
-    const newScheduleRef = push(schedulesRef);
-
-    set(newScheduleRef, {
-      ...formData,
-      contact: formData.contact,
-    })
-      .then(() => {
-        // Reset form and go back to home
-        setFormData({
-          name: "",
-          contact: "",
-          studentId: "",
-          availability: {
-            sunday: ["", "", ""],
-            monday: ["", "", ""],
-            tuesday: ["", "", ""],
-            wednesday: ["", "", ""],
-            thursday: ["", "", ""],
-          },
-        });
-
-        alert("Schedule submitted successfully!");
-        handleBackToHome();
-      })
-      .catch((error) => {
-        console.error("Error adding schedule: ", error);
-        alert("Error submitting schedule. Please try again.");
-      });
+  
+    onValue(schedulesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const schedulesArray = Object.values(data);
+  
+        // Check if user already submitted their info
+        const isDuplicate = schedulesArray.some(
+          (schedule) =>
+            schedule.name === formData.name && schedule.studentId === formData.studentId
+        );
+  
+        if (isDuplicate) {
+          alert("You have already submitted your schedule.");
+          return;
+        }
+  
+        // Proceed with submission if no duplicate found
+        const newScheduleRef = push(schedulesRef);
+        set(newScheduleRef, formData)
+          .then(() => {
+            alert("Schedule submitted successfully!");
+            handleBackToHome();
+          })
+          .catch((error) => {
+            console.error("Error adding schedule: ", error);
+            alert("Error submitting schedule. Please try again.");
+          });
+      }
+    }, { onlyOnce: true }); // Prevent multiple calls
   };
+
 
   const handleDeleteSchedule = (id) => {
     if (window.confirm("Are you sure you want to delete this schedule?")) {
@@ -472,7 +511,7 @@ function AdminLoginForm({ onBack, loginData, onChange, onSubmit }) {
       <h2>Admin Login</h2>
       <form onSubmit={onSubmit}>
         <div className="form-group">
-          <label htmlFor="username">Username</label>
+          <label htmlFor="email">E-mail</label>
           <input
             type="email"
             id="email"
@@ -581,23 +620,32 @@ function AdminLoginForm({ onBack, loginData, onChange, onSubmit }) {
 
 function AdminDashboard({ schedules, onBack, onDelete, loading }) {
   const [selectedDay, setSelectedDay] = useState("");
+  const [startTime, setStartTime] = useState(""); // New filter
+  const [endTime, setEndTime] = useState("");
 
-  // Function to filter schedules based on the selected day
-  const filteredSchedules = selectedDay
-    ? schedules.filter(
-        (schedule) =>
-          schedule.availability[selectedDay] &&
-          schedule.availability[selectedDay].some(
-            (time) => time.start && time.end
-          )
+  // Function to check if a time slot falls within the selected range
+  const isTimeInRange = (timeSlot) => {
+    if (!startTime || !endTime) return true; // If no time range is selected, return all
+    return timeSlot.start >= startTime && timeSlot.end <= endTime;
+  };
+
+  // Function to filter schedules based on the selected day and time slot
+  const filteredSchedules = schedules.filter((schedule) => {
+    if (!selectedDay) return true; // If no day is selected, return all
+
+    return (
+      schedule.availability[selectedDay] &&
+      schedule.availability[selectedDay].some((timeSlot) => 
+        timeSlot.start && timeSlot.end && isTimeInRange(timeSlot)
       )
-    : schedules;
+    );
+  });
 
   return (
     <div className="admin-dashboard">
       <h2>Admin Dashboard</h2>
 
-      {/* Dropdown to select a day */}
+      {/* Filters */}
       <div className="filter-container">
         <label htmlFor="day-select">Select a day:</label>
         <select
@@ -612,6 +660,13 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
           <option value="wednesday">Wednesday</option>
           <option value="thursday">Thursday</option>
         </select>
+
+        {/* Time Slot Filter */}
+        <label>Start Time:</label>
+  <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+
+  <label>End Time:</label>
+  <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
       </div>
 
       {loading ? (
@@ -624,18 +679,9 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
             <div key={schedule.id} className="user-schedule-card">
               <div className="user-info">
                 <h3>{schedule.name}</h3>
-                <p>
-                  <strong>Contact Number:</strong> {schedule.contact}
-                </p>
-                <p>
-                  <strong>Student ID:</strong> {schedule.studentId}
-                </p>
-                <button
-                  className="delete-button"
-                  onClick={() => onDelete(schedule.id)}
-                >
-                  Delete Schedule
-                </button>
+                <p><strong>Contact Number:</strong> {schedule.contact}</p>
+                <p><strong>Student ID:</strong> {schedule.studentId}</p>
+                <button className="delete-button" onClick={() => onDelete(schedule.id)}>Delete Schedule</button>
               </div>
 
               <table className="schedule-table">
@@ -652,9 +698,7 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
                     .filter(([day]) => !selectedDay || day === selectedDay)
                     .map(([day, times]) => (
                       <tr key={day}>
-                        <td className="day-cell">
-                          {day.charAt(0).toUpperCase() + day.slice(1)}
-                        </td>
+                        <td className="day-cell">{day.charAt(0).toUpperCase() + day.slice(1)}</td>
                         {times.map((time, index) => (
                           <td key={index} className="time-cell">
                             {time.start && time.end
@@ -671,7 +715,7 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
         </div>
       ) : (
         <div className="empty-state">
-          <p>No volunteer schedules submitted yet.</p>
+          <p>No volunteer schedules match your filters.</p>
         </div>
       )}
 
