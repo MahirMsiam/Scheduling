@@ -1,7 +1,8 @@
 import { onValue, push, ref, remove, set } from "firebase/database";
 import { useEffect, useState } from "react";
 import "./App.css";
-import { database } from "./firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { database, auth } from "./firebase"; // Import auth here
 
 function App() {
   const [schedules, setSchedules] = useState([]);
@@ -58,7 +59,7 @@ function App() {
   });
 
   const [loginData, setLoginData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
 
@@ -194,12 +195,23 @@ function App() {
 
 
     // Simple admin authentication (in a real app, this would be done securely)
-    if (loginData.username === "admin" && loginData.password === "admin") {
-      setIsAdminLoggedIn(true);
-      setShowAdminLogin(false);
-    } else {
-      alert("Invalid credentials. Please try again.");
-    }
+  //   if (loginData.username === "admin" && loginData.password === "admin") {
+  //     setIsAdminLoggedIn(true);
+  //     setShowAdminLogin(false);
+  //   } else {
+  //     alert("Invalid credentials. Please try again.");
+  //   }
+  // };
+
+  signInWithEmailAndPassword(auth, loginData.email, loginData.password)
+      .then((userCredential) => {
+        setIsAdminLoggedIn(true);
+        setShowAdminLogin(false);
+      })
+      .catch((error) => {
+        console.error("Error logging in: ", error);
+        alert("Invalid credentials. Please try again.");
+      });
   };
 
   return (
@@ -462,10 +474,10 @@ function AdminLoginForm({ onBack, loginData, onChange, onSubmit }) {
         <div className="form-group">
           <label htmlFor="username">Username</label>
           <input
-            type="text"
-            id="username"
-            name="username"
-            value={loginData.username}
+            type="email"
+            id="email"
+            name="email"
+            value={loginData.email}
             onChange={onChange}
             required
           />
