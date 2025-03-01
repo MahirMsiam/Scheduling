@@ -1,0 +1,344 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #242424;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  padding: 2rem;
+  color: #e1e1e1;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+  width: 100%;
+  border-bottom: 2px solid #cc1515;
+  padding-bottom: 1rem;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  color: #cc1515;
+  margin: 0;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.main-content h2 {
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  color: #e1e1e1;
+}
+
+.button-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.primary-button, .secondary-button {
+  padding: 0.8em 1.5em;
+  font-size: 1.1em;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.primary-button {
+  background-color: #cc1515;
+  color: white;
+  border: none;
+}
+
+.primary-button:hover {
+  background-color: #cc1515;
+  transform: translateY(-2px);
+}
+
+.secondary-button {
+  background-color: #333;
+  color: #ffffff;
+  border: 2px solid #cc1515;
+}
+
+.secondary-button:hover {
+  background-color: #cc1515;
+  transform: translateY(-2px);
+}
+
+.delete-button {
+  background-color: #ff4757;
+  color: white;
+  border: none;
+  padding: 0.5em 1em;
+  font-size: 0.9em;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.delete-button:hover {
+  background-color: #ff6b81;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 600px;
+}
+
+.form-container h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #cc1515;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #e1e1e1;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+  background-color: #ffffff;
+  color: #333;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #cc1515;
+  outline: none;
+}
+
+.form-group small {
+  display: block;
+  margin-top: 0.5rem;
+  color: #aaa;
+  font-size: 0.8rem;
+}
+
+/* New styles for daily time slots */
+.availability-heading {
+  color: #cc1515;
+  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+}
+
+.availability-instruction {
+  color: #aaa;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.day-time-container {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #333;
+  border-radius: 8px;
+}
+
+.day-heading {
+  color: #e1e1e1;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #444;
+  padding-bottom: 0.5rem;
+}
+
+.time-slots-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.time-slot {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-slot label {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.time-slot input {
+  padding: 0.6rem;
+  background-color: #ffffff;
+  color: #333;
+}
+
+/* Admin Dashboard Styles */
+.admin-dashboard {
+  width: 100%;
+}
+
+.admin-dashboard h2 {
+  margin-bottom: 1.5rem;
+}
+
+#day-select {
+  padding: 10px 15px; /* Increased padding to make it larger */
+  font-size: 16px; /* Adjusted font size */
+  font-family: 'Arial', sans-serif; /* Changed font */
+  border: 2px solid #ffffffde; /* Border for better visibility */
+  border-radius: 8px; /* Rounded corners for a modern look */
+  background-color: #f8f8f8; /* Light background for the dropdown */
+  color: #333; /* Dark text color */
+  transition: all 0.3s ease-in-out; /* Smooth transition */
+}
+
+#day-select:hover {
+  border-color: #ffffff; /* Highlight border color on hover */
+  background-color: #fffffffa; /* Slight change in background color on hover */
+}
+
+.filter-container {
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-family: 'Arial', sans-serif;
+}
+
+.filter-container label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.admin-tables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.user-schedule-card {
+  background-color: #333;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.user-info {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #444;
+}
+
+.user-info h3 {
+  color: #cc1515;
+  margin-bottom: 0.5rem;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.schedule-table th,
+.schedule-table td {
+  padding: 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid #444;
+}
+
+.schedule-table th {
+  background-color: #444;
+  color: #e1e1e1;
+  font-weight: 600;
+}
+
+.schedule-table tr:last-child td {
+  border-bottom: none;
+}
+
+.schedule-table tr:hover {
+  background-color: #3a3a3a;
+}
+
+.day-cell {
+  font-weight: 600;
+  color: #e1e1e1;
+}
+
+.time-cell {
+  color: #ccc;
+}
+
+.empty-state, .loading-state {
+  text-align: center;
+  padding: 2rem;
+  color: #aaa;
+}
+
+.empty-state p, .loading-state p {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem;
+  }
+  
+  .primary-button, .secondary-button {
+    width: 100%;
+  }
+
+  .time-slots-container {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  .schedule-table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  #root {
+    padding: 1rem;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+}

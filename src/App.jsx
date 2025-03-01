@@ -1,0 +1,677 @@
+import { onValue, push, ref, remove, set } from "firebase/database";
+import { useEffect, useState } from "react";
+import "./App.css";
+import { database } from "./firebase";
+
+function App() {
+  const [schedules, setSchedules] = useState([]);
+  const [showSubmitForm, setShowSubmitForm] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Form state
+  // const [formData, setFormData] = useState({
+  //   name: "",
+  //   email: "",
+  //   studentId: "",
+  //   availability: {
+  //     sunday: ["", "", ""],
+  //     monday: ["", "", ""],
+  //     tuesday: ["", "", ""],
+  //     wednesday: ["", "", ""],
+  //     thursday: ["", "", ""]
+  //   }
+  // });
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    studentId: "",
+    availability: {
+      sunday: [
+        { start: "", end: "" },
+        { start: "", end: "" },
+        { start: "", end: "" },
+      ],
+      monday: [
+        { start: "", end: "" },
+        { start: "", end: "" },
+        { start: "", end: "" },
+      ],
+      tuesday: [
+        { start: "", end: "" },
+        { start: "", end: "" },
+        { start: "", end: "" },
+      ],
+      wednesday: [
+        { start: "", end: "" },
+        { start: "", end: "" },
+        { start: "", end: "" },
+      ],
+      thursday: [
+        { start: "", end: "" },
+        { start: "", end: "" },
+        { start: "", end: "" },
+      ],
+    },
+  });
+
+  const [loginData, setLoginData] = useState({
+    username: "",
+    password: "",
+  });
+
+  // Fetch schedules from Firebase
+  useEffect(() => {
+    const schedulesRef = ref(database, "schedules");
+
+    const unsubscribe = onValue(schedulesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Convert Firebase object to array
+        const schedulesArray = Object.entries(data).map(([key, value]) => ({
+          id: key,
+          ...value,
+        }));
+        setSchedules(schedulesArray);
+      } else {
+        setSchedules([]);
+      }
+      setLoading(false);
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, []);
+
+  const handleSubmitSchedule = () => {
+    setShowSubmitForm(true);
+    setShowAdminLogin(false);
+    setIsAdminLoggedIn(false);
+  };
+
+  const handleAdminLogin = () => {
+    setShowAdminLogin(true);
+    setShowSubmitForm(false);
+    setIsAdminLoggedIn(false);
+  };
+
+  const handleBackToHome = () => {
+    setShowSubmitForm(false);
+    setShowAdminLogin(false);
+    setIsAdminLoggedIn(false);
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  // const handleTimeChange = (day, index, value) => {
+  //   const updatedAvailability = { ...formData.availability };
+  //   updatedAvailability[day][index] = value;
+
+  //   setFormData({
+  //     ...formData,
+  //     availability: updatedAvailability
+  //   });
+  // }
+
+  const handleTimeChange = (day, index, type, value) => {
+    const updatedAvailability = { ...formData.availability };
+    updatedAvailability[day][index][type] = value;
+
+    setFormData({
+      ...formData,
+      availability: updatedAvailability,
+    });
+  };
+
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginData({
+      ...loginData,
+      [name]: value,
+    });
+  };
+
+  const handleScheduleSubmit = (e) => {
+    e.preventDefault();
+
+    // Add new schedule to Firebase
+    const schedulesRef = ref(database, "schedules");
+    const newScheduleRef = push(schedulesRef);
+
+    set(newScheduleRef, {
+      ...formData,
+      contact: formData.contact,
+    })
+      .then(() => {
+        // Reset form and go back to home
+        setFormData({
+          name: "",
+          contact: "",
+          studentId: "",
+          availability: {
+            sunday: ["", "", ""],
+            monday: ["", "", ""],
+            tuesday: ["", "", ""],
+            wednesday: ["", "", ""],
+            thursday: ["", "", ""],
+          },
+        });
+
+        alert("Schedule submitted successfully!");
+        handleBackToHome();
+      })
+      .catch((error) => {
+        console.error("Error adding schedule: ", error);
+        alert("Error submitting schedule. Please try again.");
+      });
+  };
+
+  const handleDeleteSchedule = (id) => {
+    if (window.confirm("Are you sure you want to delete this schedule?")) {
+      const scheduleRef = ref(database, `schedules/${id}`);
+      remove(scheduleRef)
+        .then(() => {
+          alert("Schedule deleted successfully!");
+        })
+        .catch((error) => {
+          console.error("Error deleting schedule: ", error);
+          alert("Error deleting schedule. Please try again.");
+        });
+    }
+  };
+
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+
+
+
+    // Simple admin authentication (in a real app, this would be done securely)
+    if (loginData.username === "admin" && loginData.password === "admin") {
+      setIsAdminLoggedIn(true);
+      setShowAdminLogin(false);
+    } else {
+      alert("Invalid credentials. Please try again.");
+    }
+  };
+
+  return (
+    <div className="container">
+      <header className="header">
+        <h1>AIUB English Club</h1>
+      </header>
+
+      {!showSubmitForm && !showAdminLogin && !isAdminLoggedIn ? (
+        <main className="main-content">
+          <h2>Volunteers Schedule</h2>
+          <div className="button-container">
+            <button className="primary-button" onClick={handleSubmitSchedule}>
+              Submit Schedules
+            </button>
+            <button className="secondary-button" onClick={handleAdminLogin}>
+              Admin Login
+            </button>
+          </div>
+        </main>
+      ) : showSubmitForm ? (
+        <SubmitScheduleForm
+          onBack={handleBackToHome}
+          formData={formData}
+          onChange={handleFormChange}
+          onTimeChange={handleTimeChange}
+          onSubmit={handleScheduleSubmit}
+        />
+      ) : showAdminLogin ? (
+        <AdminLoginForm
+          onBack={handleBackToHome}
+          loginData={loginData}
+          onChange={handleLoginChange}
+          onSubmit={handleLoginSubmit}
+        />
+      ) : (
+        <AdminDashboard
+          schedules={schedules}
+          onBack={handleBackToHome}
+          onDelete={handleDeleteSchedule}
+          loading={loading}
+        />
+      )}
+    </div>
+  );
+}
+
+// function SubmitScheduleForm({ onBack, formData, onChange, onTimeChange, onSubmit }) {
+//   const days = [
+//     { value: "sunday", label: "Sunday" },
+//     { value: "monday", label: "Monday" },
+//     { value: "tuesday", label: "Tuesday" },
+//     { value: "wednesday", label: "Wednesday" },
+//     { value: "thursday", label: "Thursday" }
+//   ];
+
+//   return (
+//     <div className="form-container">
+//       <h2>Submit Your Schedule</h2>
+//       <form onSubmit={onSubmit}>
+//         <div className="form-group">
+//           <label htmlFor="name">Full Name</label>
+//           <input
+//             type="text"
+//             id="name"
+//             name="name"
+//             value={formData.name}
+//             onChange={onChange}
+//             required
+//           />
+//         </div>
+//         <div className="form-group">
+//           <label htmlFor="email">Email</label>
+//           <input
+//             type="email"
+//             id="email"
+//             name="email"
+//             value={formData.email}
+//             onChange={onChange}
+//             required
+//           />
+//         </div>
+//         <div className="form-group">
+//           <label htmlFor="studentId">Student ID</label>
+//           <input
+//             type="text"
+//             id="studentId"
+//             name="studentId"
+//             value={formData.studentId}
+//             onChange={onChange}
+//             required
+//           />
+//         </div>
+
+//         <div className="form-group">
+//           <h3 className="availability-heading">Available Time Slots</h3>
+//           <p className="availability-instruction">Please select up to 3 time slots for each day</p>
+
+//           {days.map(day => (
+//             <div key={day.value} className="day-time-container">
+//               <h4 className="day-heading">{day.label}</h4>
+//               <div className="time-slots-container">
+//                 {[0, 1, 2].map(index => (
+//                   <div key={`${day.value}-${index}`} className="time-slot">
+//                     <label htmlFor={`${day.value}-${index}`}>Time Slot {index + 1}</label>
+//                     <input
+//                       type="time"
+//                       id={`${day.value}-${index}`}
+//                       value={formData.availability[day.value][index]}
+//                       onChange={(e) => onTimeChange(day.value, index, e.target.value)}
+//                     />
+//                   </div>
+//                 ))}
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+
+//         <div className="button-container">
+//           <button type="submit" className="primary-button">Submit</button>
+//           <button type="button" className="secondary-button" onClick={onBack}>Back</button>
+//         </div>
+//       </form>
+//     </div>
+//   )
+// }
+
+function SubmitScheduleForm({
+  onBack,
+  formData,
+  onChange,
+  onTimeChange,
+  onSubmit,
+}) {
+  const days = [
+    { value: "sunday", label: "Sunday" },
+    { value: "monday", label: "Monday" },
+    { value: "tuesday", label: "Tuesday" },
+    { value: "wednesday", label: "Wednesday" },
+    { value: "thursday", label: "Thursday" },
+  ];
+
+  return (
+    <div className="form-container">
+      <h2>Submit Your Schedule</h2>
+      <form onSubmit={onSubmit}>
+        <div className="form-group">
+          <label htmlFor="name">Full Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={onChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="contact">Contact Number</label>
+          <input
+            type="tel"
+            id="contact"
+            name="contact"
+            value={formData.contact}
+            onChange={onChange}
+            required
+            pattern="[0-9]{11}"
+            placeholder="01XXXXXXXXX"
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="studentId">Student ID</label>
+          <input
+            type="text"
+            id="studentId"
+            name="studentId"
+            value={formData.studentId}
+            onChange={onChange}
+            required
+            placeholder="20-57xxx-1"
+          />
+        </div>
+
+        <div className="form-group">
+          <h3 className="availability-heading">Available Time Slots</h3>
+          <p className="availability-instruction">
+            Please select up to 3 time ranges for each day
+          </p>
+
+          {days.map((day) => (
+            <div key={day.value} className="day-time-container">
+              <h4 className="day-heading">{day.label}</h4>
+              <div className="time-slots-container">
+                {[0, 1, 2].map((index) => (
+                  // <div key={`${day.value}-${index}`} className="time-slot">
+                  //   <label htmlFor={`${day.value}-${index}-start`}>Time Slot {index + 1} - Start</label>
+                  //   <input
+                  //     type="time"
+                  //     id={`${day.value}-${index}-start`}
+                  //     value={formData.availability[day.value][index].start}
+                  //     onChange={(e) => onTimeChange(day.value, index, "start", e.target.value)}
+                  //   />
+                  //   <label htmlFor={`${day.value}-${index}-end`}>Time Slot {index + 1} - End</label>
+                  //   <input
+                  //     type="time"
+                  //     id={`${day.value}-${index}-end`}
+                  //     value={formData.availability[day.value][index].end}
+                  //     onChange={(e) => onTimeChange(day.value, index, "end", e.target.value)}
+                  //   />
+                  // </div>
+                  <div key={`${day.value}-${index}`} className="time-slot">
+                    <label htmlFor={`${day.value}-${index}-start`}>
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      id={`${day.value}-${index}-start`}
+                      value={formData.availability[day.value][index].start}
+                      onChange={(e) =>
+                        onTimeChange(day.value, index, "start", e.target.value)
+                      }
+                    />
+
+                    <label htmlFor={`${day.value}-${index}-end`}>
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      id={`${day.value}-${index}-end`}
+                      value={formData.availability[day.value][index].end}
+                      onChange={(e) =>
+                        onTimeChange(day.value, index, "end", e.target.value)
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="button-container">
+          <button type="submit" className="primary-button">
+            Submit
+          </button>
+          <button type="button" className="secondary-button" onClick={onBack}>
+            Back
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function AdminLoginForm({ onBack, loginData, onChange, onSubmit }) {
+  return (
+    <div className="form-container">
+      <h2>Admin Login</h2>
+      <form onSubmit={onSubmit}>
+        <div className="form-group">
+          <label htmlFor="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            value={loginData.username}
+            onChange={onChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={loginData.password}
+            onChange={onChange}
+            required
+          />
+        </div>
+        <div className="button-container">
+          <button type="submit" className="primary-button">
+            Login
+          </button>
+          <button type="button" className="secondary-button" onClick={onBack}>
+            Back
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// function AdminDashboard({ schedules, onBack, onDelete, loading }) {
+//   return (
+//     <div className="admin-dashboard">
+//       <h2>Admin Dashboard</h2>
+
+//       {loading ? (
+//         <div className="loading-state">
+//           <p>Loading schedules...</p>
+//         </div>
+//       ) : schedules.length > 0 ? (
+//         <div className="admin-tables-container">
+//           {schedules.map((schedule) => (
+//             <div key={schedule.id} className="user-schedule-card">
+//               <div className="user-info">
+//                 <h3>{schedule.name}</h3>
+//                 <p>
+//                   <strong>Email:</strong> {schedule.email}
+//                 </p>
+//                 <p>
+//                   <strong>Student ID:</strong> {schedule.studentId}
+//                 </p>
+//                 <button
+//                   className="delete-button"
+//                   onClick={() => onDelete(schedule.id)}
+//                 >
+//                   Delete Schedule
+//                 </button>
+//               </div>
+
+//               <table className="schedule-table">
+//                 <thead>
+//                   <tr>
+//                     <th>Day</th>
+//                     <th>Time Slot 1</th>
+//                     <th>Time Slot 2</th>
+//                     <th>Time Slot 3</th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {Object.entries(schedule.availability).map(([day, times]) => (
+//                     <tr key={day}>
+//                       <td className="day-cell">
+//                         {day.charAt(0).toUpperCase() + day.slice(1)}
+//                       </td>
+//                       {times.map((time, index) => (
+//                         <td key={index} className="time-cell">
+//                           {time.start && time.end
+//                             ? `${time.start} - ${time.end}`
+//                             : "Not set"}
+//                         </td>
+//                       ))}
+//                     </tr>
+//                   ))}
+//                 </tbody>
+//               </table>
+//             </div>
+//           ))}
+//         </div>
+//       ) : (
+//         <div className="empty-state">
+//           <p>No volunteer schedules submitted yet.</p>
+//         </div>
+//       )}
+
+//       <div className="button-container">
+//         <button className="secondary-button" onClick={onBack}>
+//           Back to Home
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
+
+function AdminDashboard({ schedules, onBack, onDelete, loading }) {
+  const [selectedDay, setSelectedDay] = useState("");
+
+  // Function to filter schedules based on the selected day
+  const filteredSchedules = selectedDay
+    ? schedules.filter(
+        (schedule) =>
+          schedule.availability[selectedDay] &&
+          schedule.availability[selectedDay].some(
+            (time) => time.start && time.end
+          )
+      )
+    : schedules;
+
+  return (
+    <div className="admin-dashboard">
+      <h2>Admin Dashboard</h2>
+
+      {/* Dropdown to select a day */}
+      <div className="filter-container">
+        <label htmlFor="day-select">Select a day:</label>
+        <select
+          id="day-select"
+          value={selectedDay}
+          onChange={(e) => setSelectedDay(e.target.value)}
+        >
+          <option value="">All Days</option>
+          <option value="sunday">Sunday</option>
+          <option value="monday">Monday</option>
+          <option value="tuesday">Tuesday</option>
+          <option value="wednesday">Wednesday</option>
+          <option value="thursday">Thursday</option>
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="loading-state">
+          <p>Loading schedules...</p>
+        </div>
+      ) : filteredSchedules.length > 0 ? (
+        <div className="admin-tables-container">
+          {filteredSchedules.map((schedule) => (
+            <div key={schedule.id} className="user-schedule-card">
+              <div className="user-info">
+                <h3>{schedule.name}</h3>
+                <p>
+                  <strong>Contact Number:</strong> {schedule.contact}
+                </p>
+                <p>
+                  <strong>Student ID:</strong> {schedule.studentId}
+                </p>
+                <button
+                  className="delete-button"
+                  onClick={() => onDelete(schedule.id)}
+                >
+                  Delete Schedule
+                </button>
+              </div>
+
+              <table className="schedule-table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Time Slot 1</th>
+                    <th>Time Slot 2</th>
+                    <th>Time Slot 3</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(schedule.availability)
+                    .filter(([day]) => !selectedDay || day === selectedDay)
+                    .map(([day, times]) => (
+                      <tr key={day}>
+                        <td className="day-cell">
+                          {day.charAt(0).toUpperCase() + day.slice(1)}
+                        </td>
+                        {times.map((time, index) => (
+                          <td key={index} className="time-cell">
+                            {time.start && time.end
+                              ? `${time.start} - ${time.end}`
+                              : "Not set"}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <p>No volunteer schedules submitted yet.</p>
+        </div>
+      )}
+
+      <div className="button-container">
+        <button className="secondary-button" onClick={onBack}>
+          Back to Home
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+export default App;
