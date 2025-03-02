@@ -175,7 +175,7 @@ function App() {
   //     });
   // };
 
-  //Validation
+  //Validation so no user can submit the same schedule twice
 
   const handleScheduleSubmit = (e) => {
     e.preventDefault();
