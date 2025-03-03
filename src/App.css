@@ -209,6 +209,26 @@
   margin-bottom: 1.5rem;
 }
 
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.search-box {
+  margin-left: 20px
+  padding: 45% 25px;
+  font-size: 16px;
+  font-family: 'Arial', sans-serif;
+  border: 2px solid #ffffffde;
+  border-radius: 8px;
+  background-color: #f8f8f8;
+  color: #333;
+  transition: all 0.3s ease-in-out;
+   width: 60%;
+}
+
 #day-select {
   padding: 10px 15px; /* Increased padding to make it larger */
   font-size: 16px; /* Adjusted font size */

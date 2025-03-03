@@ -620,30 +620,35 @@ function AdminLoginForm({ onBack, loginData, onChange, onSubmit }) {
 
 function AdminDashboard({ schedules, onBack, onDelete, loading }) {
   const [selectedDay, setSelectedDay] = useState("");
-  const [startTime, setStartTime] = useState(""); // New filter
+  const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); // New state for search query
 
-  // Function to check if a time slot falls within the selected range
   const isTimeInRange = (timeSlot) => {
-    if (!startTime || !endTime) return true; // If no time range is selected, return all
+    if (!startTime || !endTime) return true;
     return timeSlot.start >= startTime && timeSlot.end <= endTime;
   };
 
-  // Function to filter schedules based on the selected day and time slot
   const filteredSchedules = schedules.filter((schedule) => {
-    if (!selectedDay) return true; // If no day is selected, return all
-
-    return (
-      schedule.availability[selectedDay] &&
-      schedule.availability[selectedDay].some((timeSlot) => 
-        timeSlot.start && timeSlot.end && isTimeInRange(timeSlot)
-      )
-    );
+    const matchesDay = !selectedDay || schedule.availability[selectedDay]?.some(isTimeInRange);
+    const matchesSearch = schedule.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesDay && matchesSearch;
   });
 
   return (
     <div className="admin-dashboard">
-      <h2>Admin Dashboard</h2>
+      <div className="dashboard-header">
+        <h2>Admin Dashboard</h2>
+        {/* Search Box */}
+        <input
+          type="text"
+          id="search-box"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by Name"
+          className="search-box"
+        />
+      </div>
 
       {/* Filters */}
       <div className="filter-container">
@@ -661,12 +666,11 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
           <option value="thursday">Thursday</option>
         </select>
 
-        {/* Time Slot Filter */}
         <label>Start Time:</label>
-  <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+        <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
 
-  <label>End Time:</label>
-  <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+        <label>End Time:</label>
+        <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
       </div>
 
       {loading ? (
