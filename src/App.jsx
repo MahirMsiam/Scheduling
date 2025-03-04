@@ -650,6 +650,11 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
         />
       </div>
 
+      {/* Counter */}
+      <div className="schedule-counter">
+        <p>Total Schedules submitted: {schedules.length}</p>
+      </div>
+
       {/* Filters */}
       <div className="filter-container">
         <label htmlFor="day-select">Select a day:</label>
