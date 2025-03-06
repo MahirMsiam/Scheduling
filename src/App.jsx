@@ -11,21 +11,9 @@ function App() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   // Form state
-  // const [formData, setFormData] = useState({
-  //   name: "",
-  //   email: "",
-  //   studentId: "",
-  //   availability: {
-  //     sunday: ["", "", ""],
-  //     monday: ["", "", ""],
-  //     tuesday: ["", "", ""],
-  //     wednesday: ["", "", ""],
-  //     thursday: ["", "", ""]
-  //   }
-  // });
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -64,13 +52,31 @@ function App() {
     password: "",
   });
 
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-
   useEffect(() => {
-    window.addEventListener('beforeinstallprompt', (e) => {
+    const handleBeforeInstallPrompt = (e) => {
+      console.log('beforeinstallprompt event triggered'); // Log the event
       e.preventDefault();
       setDeferredPrompt(e);
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleAppInstalled = () => {
+      console.log('App installed successfully');
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
   }, []);
 
   const handleInstallClick = () => {
@@ -78,17 +84,16 @@ function App() {
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the A2HS prompt');
+          console.log('User accepted the install prompt');
         } else {
-          console.log('User dismissed the A2HS prompt');
+          console.log('User dismissed the install prompt');
         }
         setDeferredPrompt(null);
       });
+    } else {
+      console.log('Deferred prompt is not available');
     }
   };
-
-
-
 
   // Fetch schedules from Firebase
   useEffect(() => {
@@ -125,8 +130,6 @@ function App() {
     setIsAdminLoggedIn(false);
   };
 
-  
-
   const handleBackToHome = () => {
     setShowSubmitForm(false);
     setShowAdminLogin(false);
@@ -140,16 +143,6 @@ function App() {
       [name]: value,
     });
   };
-
-  // const handleTimeChange = (day, index, value) => {
-  //   const updatedAvailability = { ...formData.availability };
-  //   updatedAvailability[day][index] = value;
-
-  //   setFormData({
-  //     ...formData,
-  //     availability: updatedAvailability
-  //   });
-  // }
 
   const handleTimeChange = (day, index, type, value) => {
     const updatedAvailability = { ...formData.availability };
@@ -169,79 +162,46 @@ function App() {
     });
   };
 
-  // const handleScheduleSubmit = (e) => {
-  //   e.preventDefault();
-
-  //   // Add new schedule to Firebase
-  //   const schedulesRef = ref(database, "schedules");
-  //   const newScheduleRef = push(schedulesRef);
-
-  //   set(newScheduleRef, {
-  //     ...formData,
-  //     contact: formData.contact,
-  //   })
-  //     .then(() => {
-  //       // Reset form and go back to home
-  //       setFormData({
-  //         name: "",
-  //         contact: "",
-  //         studentId: "",
-  //         availability: {
-  //           sunday: ["", "", ""],
-  //           monday: ["", "", ""],
-  //           tuesday: ["", "", ""],
-  //           wednesday: ["", "", ""],
-  //           thursday: ["", "", ""],
-  //         },
-  //       });
-
-  //       alert("Schedule submitted successfully!");
-  //       handleBackToHome();
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error adding schedule: ", error);
-  //       alert("Error submitting schedule. Please try again.");
-  //     });
-  // };
-
-  //Validation so no user can submit the same schedule twice
-
   const handleScheduleSubmit = (e) => {
     e.preventDefault();
-  
-    const schedulesRef = ref(database, "schedules");
-  
-    onValue(schedulesRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const schedulesArray = Object.values(data);
-  
-        // Check if user already submitted their info
-        const isDuplicate = schedulesArray.some(
-          (schedule) =>
-            schedule.name === formData.name && schedule.studentId === formData.studentId
-        );
-  
-        if (isDuplicate) {
-          alert("You have already submitted your schedule.");
-          return;
-        }
-  
-        // Proceed with submission if no duplicate found
-        const newScheduleRef = push(schedulesRef);
-        set(newScheduleRef, formData)
-          .then(() => {
-            alert("Schedule submitted successfully!");
-            handleBackToHome();
-          })
-          .catch((error) => {
-            console.error("Error adding schedule: ", error);
-            alert("Error submitting schedule. Please try again.");
-          });
-      }
-    }, { onlyOnce: true }); // Prevent multiple calls
-  };
 
+    const schedulesRef = ref(database, "schedules");
+
+    onValue(
+      schedulesRef,
+      (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const schedulesArray = Object.values(data);
+
+          // Check if user already submitted their info
+          const isDuplicate = schedulesArray.some(
+            (schedule) =>
+              schedule.name === formData.name &&
+              schedule.studentId === formData.studentId
+          );
+
+          if (isDuplicate) {
+            alert("You have already submitted your schedule.");
+            return;
+          }
+
+          // Proceed with submission if no duplicate found
+          const newScheduleRef = push(schedulesRef);
+          set(newScheduleRef, formData)
+            .then(() => {
+              alert("Schedule submitted successfully!");
+              handleBackToHome();
+            })
+            .catch((error) => {
+              console.error("Error adding schedule: ", error);
+              alert("Error submitting schedule. Please try again.");
+            });
+        }
+      },
+      { onlyOnce: true }
+    ); // Prevent multiple calls
+  };
 
   const handleDeleteSchedule = (id) => {
     if (window.confirm("Are you sure you want to delete this schedule?")) {
@@ -260,18 +220,7 @@ function App() {
   const handleLoginSubmit = (e) => {
     e.preventDefault();
 
-
-
-    // Simple admin authentication (in a real app, this would be done securely)
-  //   if (loginData.username === "admin" && loginData.password === "admin") {
-  //     setIsAdminLoggedIn(true);
-  //     setShowAdminLogin(false);
-  //   } else {
-  //     alert("Invalid credentials. Please try again.");
-  //   }
-  // };
-
-  signInWithEmailAndPassword(auth, loginData.email, loginData.password)
+    signInWithEmailAndPassword(auth, loginData.email, loginData.password)
       .then((userCredential) => {
         setIsAdminLoggedIn(true);
         setShowAdminLogin(false);
@@ -288,7 +237,9 @@ function App() {
         <h1>AIUB English Club</h1>
       </header>
 
-      <button className="install-button" onClick={handleInstallClick}>Install App</button>
+      <button className="install-button" onClick={handleInstallClick}>
+        {deferredPrompt ? 'Install App' : 'App Installed'}
+      </button>
 
       {!showSubmitForm && !showAdminLogin && !isAdminLoggedIn ? (
         <main className="main-content">
@@ -328,86 +279,6 @@ function App() {
     </div>
   );
 }
-
-// function SubmitScheduleForm({ onBack, formData, onChange, onTimeChange, onSubmit }) {
-//   const days = [
-//     { value: "sunday", label: "Sunday" },
-//     { value: "monday", label: "Monday" },
-//     { value: "tuesday", label: "Tuesday" },
-//     { value: "wednesday", label: "Wednesday" },
-//     { value: "thursday", label: "Thursday" }
-//   ];
-
-//   return (
-//     <div className="form-container">
-//       <h2>Submit Your Schedule</h2>
-//       <form onSubmit={onSubmit}>
-//         <div className="form-group">
-//           <label htmlFor="name">Full Name</label>
-//           <input
-//             type="text"
-//             id="name"
-//             name="name"
-//             value={formData.name}
-//             onChange={onChange}
-//             required
-//           />
-//         </div>
-//         <div className="form-group">
-//           <label htmlFor="email">Email</label>
-//           <input
-//             type="email"
-//             id="email"
-//             name="email"
-//             value={formData.email}
-//             onChange={onChange}
-//             required
-//           />
-//         </div>
-//         <div className="form-group">
-//           <label htmlFor="studentId">Student ID</label>
-//           <input
-//             type="text"
-//             id="studentId"
-//             name="studentId"
-//             value={formData.studentId}
-//             onChange={onChange}
-//             required
-//           />
-//         </div>
-
-//         <div className="form-group">
-//           <h3 className="availability-heading">Available Time Slots</h3>
-//           <p className="availability-instruction">Please select up to 3 time slots for each day</p>
-
-//           {days.map(day => (
-//             <div key={day.value} className="day-time-container">
-//               <h4 className="day-heading">{day.label}</h4>
-//               <div className="time-slots-container">
-//                 {[0, 1, 2].map(index => (
-//                   <div key={`${day.value}-${index}`} className="time-slot">
-//                     <label htmlFor={`${day.value}-${index}`}>Time Slot {index + 1}</label>
-//                     <input
-//                       type="time"
-//                       id={`${day.value}-${index}`}
-//                       value={formData.availability[day.value][index]}
-//                       onChange={(e) => onTimeChange(day.value, index, e.target.value)}
-//                     />
-//                   </div>
-//                 ))}
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-
-//         <div className="button-container">
-//           <button type="submit" className="primary-button">Submit</button>
-//           <button type="button" className="secondary-button" onClick={onBack}>Back</button>
-//         </div>
-//       </form>
-//     </div>
-//   )
-// }
 
 function SubmitScheduleForm({
   onBack,
@@ -476,22 +347,6 @@ function SubmitScheduleForm({
               <h4 className="day-heading">{day.label}</h4>
               <div className="time-slots-container">
                 {[0, 1, 2].map((index) => (
-                  // <div key={`${day.value}-${index}`} className="time-slot">
-                  //   <label htmlFor={`${day.value}-${index}-start`}>Time Slot {index + 1} - Start</label>
-                  //   <input
-                  //     type="time"
-                  //     id={`${day.value}-${index}-start`}
-                  //     value={formData.availability[day.value][index].start}
-                  //     onChange={(e) => onTimeChange(day.value, index, "start", e.target.value)}
-                  //   />
-                  //   <label htmlFor={`${day.value}-${index}-end`}>Time Slot {index + 1} - End</label>
-                  //   <input
-                  //     type="time"
-                  //     id={`${day.value}-${index}-end`}
-                  //     value={formData.availability[day.value][index].end}
-                  //     onChange={(e) => onTimeChange(day.value, index, "end", e.target.value)}
-                  //   />
-                  // </div>
                   <div key={`${day.value}-${index}`} className="time-slot">
                     <label htmlFor={`${day.value}-${index}-start`}>
                       Start Time
@@ -575,80 +430,6 @@ function AdminLoginForm({ onBack, loginData, onChange, onSubmit }) {
     </div>
   );
 }
-
-// function AdminDashboard({ schedules, onBack, onDelete, loading }) {
-//   return (
-//     <div className="admin-dashboard">
-//       <h2>Admin Dashboard</h2>
-
-//       {loading ? (
-//         <div className="loading-state">
-//           <p>Loading schedules...</p>
-//         </div>
-//       ) : schedules.length > 0 ? (
-//         <div className="admin-tables-container">
-//           {schedules.map((schedule) => (
-//             <div key={schedule.id} className="user-schedule-card">
-//               <div className="user-info">
-//                 <h3>{schedule.name}</h3>
-//                 <p>
-//                   <strong>Email:</strong> {schedule.email}
-//                 </p>
-//                 <p>
-//                   <strong>Student ID:</strong> {schedule.studentId}
-//                 </p>
-//                 <button
-//                   className="delete-button"
-//                   onClick={() => onDelete(schedule.id)}
-//                 >
-//                   Delete Schedule
-//                 </button>
-//               </div>
-
-//               <table className="schedule-table">
-//                 <thead>
-//                   <tr>
-//                     <th>Day</th>
-//                     <th>Time Slot 1</th>
-//                     <th>Time Slot 2</th>
-//                     <th>Time Slot 3</th>
-//                   </tr>
-//                 </thead>
-//                 <tbody>
-//                   {Object.entries(schedule.availability).map(([day, times]) => (
-//                     <tr key={day}>
-//                       <td className="day-cell">
-//                         {day.charAt(0).toUpperCase() + day.slice(1)}
-//                       </td>
-//                       {times.map((time, index) => (
-//                         <td key={index} className="time-cell">
-//                           {time.start && time.end
-//                             ? `${time.start} - ${time.end}`
-//                             : "Not set"}
-//                         </td>
-//                       ))}
-//                     </tr>
-//                   ))}
-//                 </tbody>
-//               </table>
-//             </div>
-//           ))}
-//         </div>
-//       ) : (
-//         <div className="empty-state">
-//           <p>No volunteer schedules submitted yet.</p>
-//         </div>
-//       )}
-
-//       <div className="button-container">
-//         <button className="secondary-button" onClick={onBack}>
-//           Back to Home
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
 function AdminDashboard({ schedules, onBack, onDelete, loading }) {
   const [selectedDay, setSelectedDay] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -661,8 +442,11 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
   };
 
   const filteredSchedules = schedules.filter((schedule) => {
-    const matchesDay = !selectedDay || schedule.availability[selectedDay]?.some(isTimeInRange);
-    const matchesSearch = schedule.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesDay =
+      !selectedDay || schedule.availability[selectedDay]?.some(isTimeInRange);
+    const matchesSearch = schedule.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     return matchesDay && matchesSearch;
   });
 
@@ -703,10 +487,18 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
         </select>
 
         <label>Start Time:</label>
-        <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+        <input
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+        />
 
         <label>End Time:</label>
-        <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+        <input
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+        />
       </div>
 
       {loading ? (
@@ -719,9 +511,18 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
             <div key={schedule.id} className="user-schedule-card">
               <div className="user-info">
                 <h3>{schedule.name}</h3>
-                <p><strong>Contact Number:</strong> {schedule.contact}</p>
-                <p><strong>Student ID:</strong> {schedule.studentId}</p>
-                <button className="delete-button" onClick={() => onDelete(schedule.id)}>Delete Schedule</button>
+                <p>
+                  <strong>Contact Number:</strong> {schedule.contact}
+                </p>
+                <p>
+                  <strong>Student ID:</strong> {schedule.studentId}
+                </p>
+                <button
+                  className="delete-button"
+                  onClick={() => onDelete(schedule.id)}
+                >
+                  Delete Schedule
+                </button>
               </div>
 
               <table className="schedule-table">
@@ -738,7 +539,9 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
                     .filter(([day]) => !selectedDay || day === selectedDay)
                     .map(([day, times]) => (
                       <tr key={day}>
-                        <td className="day-cell">{day.charAt(0).toUpperCase() + day.slice(1)}</td>
+                        <td className="day-cell">
+                          {day.charAt(0).toUpperCase() + day.slice(1)}
+                        </td>
                         {times.map((time, index) => (
                           <td key={index} className="time-cell">
                             {time.start && time.end
@@ -767,7 +570,5 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
     </div>
   );
 }
-
-
 
 export default App;
