@@ -1,8 +1,9 @@
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { onValue, push, ref, remove, set } from "firebase/database";
 import { useEffect, useState } from "react";
 import "./App.css";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { database, auth } from "./firebase"; // Import auth here
+import { auth, database } from "./firebase"; // Import auth here
+import './index.css';
 
 function App() {
   const [schedules, setSchedules] = useState([]);
@@ -63,6 +64,32 @@ function App() {
     password: "",
   });
 
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    });
+  }, []);
+
+  const handleInstallClick = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the A2HS prompt');
+        } else {
+          console.log('User dismissed the A2HS prompt');
+        }
+        setDeferredPrompt(null);
+      });
+    }
+  };
+
+
+
+
   // Fetch schedules from Firebase
   useEffect(() => {
     const schedulesRef = ref(database, "schedules");
@@ -97,6 +124,8 @@ function App() {
     setShowSubmitForm(false);
     setIsAdminLoggedIn(false);
   };
+
+  
 
   const handleBackToHome = () => {
     setShowSubmitForm(false);
@@ -258,6 +287,8 @@ function App() {
       <header className="header">
         <h1>AIUB English Club</h1>
       </header>
+
+      <button className="install-button" onClick={handleInstallClick}>Install App</button>
 
       {!showSubmitForm && !showAdminLogin && !isAdminLoggedIn ? (
         <main className="main-content">
