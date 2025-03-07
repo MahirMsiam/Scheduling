@@ -3,6 +3,7 @@ import { onValue, push, ref, remove, set } from "firebase/database";
 import { useEffect, useState } from "react";
 import "./App.css";
 import { auth, database } from "./firebase"; // Import auth here
+import Footer from './Footer';
 import './index.css';
 
 function App() {
@@ -228,6 +229,7 @@ function App() {
           loading={loading}
         />
       )}
+      <Footer />
     </div>
   );
 }

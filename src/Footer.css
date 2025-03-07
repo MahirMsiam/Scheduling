@@ -1,0 +1,31 @@
+.footer {
+  background-color: #242424;
+  color: #e1e1e1;
+  text-align: center;
+  padding: 0.25rem; /* Further reduced padding */
+  font-size: 0.7rem; /* Further reduced font size */
+  position: fixed;
+  bottom: 0;
+  width: 45%; /* Reverted to original width */
+  font-family: Arial, sans-serif;
+}
+
+.footer p {
+  margin: 0.1rem 0; /* Further reduced margin */
+  font-family: Arial, sans-serif;
+}
+
+.social-icons {
+  margin-top: 0.25rem; /* Further reduced margin */
+}
+
+.social-icons a {
+  margin: 0 0.1rem; /* Further reduced margin */
+  display: inline-block;
+}
+
+.social-icons img {
+  width: 10px; /* Further reduced size */
+  height: 10px; /* Further reduced size */
+  filter: invert(100%);
+}
