@@ -11,7 +11,6 @@ function App() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -51,49 +50,6 @@ function App() {
     email: "",
     password: "",
   });
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      console.log('beforeinstallprompt event triggered'); // Log the event
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleAppInstalled = () => {
-      console.log('App installed successfully');
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  const handleInstallClick = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the install prompt');
-        } else {
-          console.log('User dismissed the install prompt');
-        }
-        setDeferredPrompt(null);
-      });
-    } else {
-      console.log('Deferred prompt is not available');
-    }
-  };
 
   // Fetch schedules from Firebase
   useEffect(() => {
@@ -236,10 +192,6 @@ function App() {
       <header className="header">
         <h1>AIUB English Club</h1>
       </header>
-
-      <button className="install-button" onClick={handleInstallClick}>
-        {deferredPrompt ? 'Install App' : 'App Installed'}
-      </button>
 
       {!showSubmitForm && !showAdminLogin && !isAdminLoggedIn ? (
         <main className="main-content">
