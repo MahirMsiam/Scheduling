@@ -21,5 +21,3 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
-
-serviceWorker.register();
