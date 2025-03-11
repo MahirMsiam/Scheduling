@@ -8,16 +8,16 @@ const Footer = () => {
       <p>This app was developed by Mahir Mahmud Siam</p>
       <div className="social-icons">
         <a href="https://github.com/MahirMsiam" target="_blank" rel="noopener noreferrer">
-          <img src="/src/icons/github.png" alt="GitHub" />
+          <img src="/src/icons/github.svg" alt="GitHub" />
         </a>
         <a href="https://www.linkedin.com/in/mahir-mahmud-siam" target="_blank" rel="noopener noreferrer">
-          <img src="/src/icons/linkedin.png" alt="LinkedIn" />
+          <img src="/src/icons/linkedin.svg" alt="LinkedIn" />
         </a>
         <a href="https://www.facebook.com/mahirmahmudsiam" target="_blank" rel="noopener noreferrer">
-          <img src="/src/icons/facebook.png" alt="Facebook" />
+          <img src="/src/icons/facebook.svg" alt="Facebook" />
         </a>
         <a href="https://www.instagram.com/bhallagtase_na" target="_blank" rel="noopener noreferrer">
-          <img src="/src/icons/instagram.png" alt="Instagram" />
+          <img src="/src/icons/instagram.svg" alt="Instagram" />
         </a>
       </div>
     </footer>

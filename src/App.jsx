@@ -188,6 +188,20 @@ function App() {
       });
   };
 
+  const handleDeleteAllSchedules = () => {
+    if (window.confirm("Are you sure you want to delete all schedules?")) {
+      const schedulesRef = ref(database, "schedules");
+      remove(schedulesRef)
+        .then(() => {
+          alert("All schedules deleted successfully!");
+        })
+        .catch((error) => {
+          console.error("Error deleting all schedules: ", error);
+          alert("Error deleting all schedules. Please try again.");
+        });
+    }
+  };
+
   return (
     <div className="container">
       <header className="header">
@@ -227,6 +241,7 @@ function App() {
           onBack={handleBackToHome}
           onDelete={handleDeleteSchedule}
           loading={loading}
+          onDeleteAll={handleDeleteAllSchedules} // Pass the delete all handler
         />
       )}
       <Footer />
@@ -384,7 +399,7 @@ function AdminLoginForm({ onBack, loginData, onChange, onSubmit }) {
     </div>
   );
 }
-function AdminDashboard({ schedules, onBack, onDelete, loading }) {
+function AdminDashboard({ schedules, onBack, onDelete, loading, onDeleteAll }) {
   const [selectedDay, setSelectedDay] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -417,6 +432,13 @@ function AdminDashboard({ schedules, onBack, onDelete, loading }) {
           placeholder="Search by Name"
           className="search-box"
         />
+      </div>
+
+      {/* Delete All Schedules Button */}
+      <div className="button-container">
+        <button className="delete-all-button" onClick={onDeleteAll}>
+          Delete All Schedules
+        </button>
       </div>
 
       {/* Counter */}

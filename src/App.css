@@ -120,6 +120,25 @@
   background-color: #ff6b81;
 }
 
+.delete-all-button {
+  background-color: #ff4757;
+  color: white;
+  border: none;
+  padding: 0.8em 1.5em;
+  font-size: 1.1em;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+  margin-top: 1rem;
+}
+
+.delete-all-button:hover {
+  background-color: #ff6b81;
+  transform: translateY(-2px);
+}
+
 .form-container {
   width: 100%;
   max-width: 600px;
